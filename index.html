@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #ct {
+            width: 800px;
+            margin: auto;
+            background-color: antiquewhite;
+        }
+
+        .row {
+            display: flex;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .col {
+            width: 220px;
+            text-align: center;
+        }
+        .col:nth-child(1){
+            width: 140px;
+            text-align: right;
+            padding-right: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ct">
+        <select id="lc" onchange="display();">
+
+        </select>
+        <div id="weather">
+
+        </div>
+    </div>
+    <script src="jquery-3.6.0.min.js"></script>
+    <script>
+        let dataid = "F-C0032-001";
+        let Authorization = "CWB-06AC1363-0468-4ED7-91F9-BC84573E2A6E";
+        let format = "json";
+        let url = `https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/${dataid}?Authorization=${Authorization}&format=${format}`;
+        let data;
+        let ct = document.querySelector("#ct");
+        let lc = document.querySelector("#lc");
+        let weather = document.querySelector("#weather");
+        let opt = "";
+
+
+        $.get(url, function (res) {
+            data = res;
+            console.log(data);
+            let i = 0;
+            for (let value of data.cwbopendata.dataset.location) {
+                opt += ("<option value='" + i + "'>" + value.locationName + "</option>")
+                i++;
+            }
+            lc.innerHTML = opt;
+            display();
+        })
+        function trans(time,data){
+            if( data =="date"){
+                return time.split('T')[0];
+            }else{
+                return (time.split('T')[1]).split('+')[0];
+            }
+        }
+        function display() {
+            let str = "";
+            let num = lc.value;
+            let time = data.cwbopendata.dataset.location[0].weatherElement[0].time;
+            let weather_EC = data.cwbopendata.dataset.location[0].weatherElement;
+
+            for (let i = -1; i < 4; i++) {
+                str += "<div class='row'>";
+                for (let j = -1; j < 3; j++) {
+                    str += "<div class ='col'>";
+                    switch (i) {
+                        case -1:
+                            if (j > -1) {
+                                let start =data.cwbopendata.dataset.location[num].weatherElement[0].time[j].startTime;
+                                let end =data.cwbopendata.dataset.location[num].weatherElement[0].time[j].endTime;
+                                str += trans(start,"date") +"-"+trans(start,"time") +"<br>";
+                                str +=  trans(end,"date") + "-"+trans(end,"time");
+                            }else{
+                                str += "time";
+                            }
+                            break;
+                        case 0:
+                            if (j > -1) {
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName ;
+                                let img_num = data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterValue;
+                                if(parseInt(img_num)<10){
+                                    img_num = "0" +img_num;
+                                }
+
+                                let start =data.cwbopendata.dataset.location[num].weatherElement[0].time[j].startTime;
+                                
+                                let x = (trans(start,"time").split(":")[0] == "18") ? "night/":"day/";
+                                str += "<img src = './svg/"+x+img_num+".svg'>";
+                            }else{
+                                str += "天氣狀態";
+                            }
+                            break;
+                        case 1:
+                            if (j > -1) {
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i+1].time[j].parameter.parameterName+" C ~ ";
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName+" C";
+                            }else{
+                                str += "溫度";
+                            }
+                            break;
+                        default:
+                            if (j > -1) {
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i+1].time[j].parameter.parameterName;
+                                str += ((i == 2)?"":"%");
+                            }else{
+                                str += ((i == 2)?"舒適度":"降雨機率");
+                            }
+                            break;
+                    }
+                    str += "</div>";
+                }
+                str += "</div>";
+            }
+
+
+
+            // for (let i = -1; i < weather_EC.length; i++) {
+            //     str += "<div class='row'>";
+            //     for (let j = -1; j < time.length; j++) {
+            //         if (j == -1) {
+            //             if (i > -1) {
+            //                 str += "<div class ='col'>";
+            //                 str += data.cwbopendata.dataset.location[num].weatherElement[i].elementName;
+            //                 str += "</div>";
+            //             } else {
+            //                 str += "<div class ='col'></div>";
+            //             }
+            //         } else {
+            //             str += "<div class ='col'>";
+            //             switch (i) {
+            //                 case -1:
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[0].time[j].startTime + "<br>";
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[0].time[j].endTime;
+            //                     break;
+            //                 case 0:
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName + "<br>";
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterValue;
+            //                     break;
+            //                 case 1:
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName;
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterUnit;
+            //                     break;
+            //                 case 2:
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName;
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterUnit;
+            //                     break;
+            //                 case 3:
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName;
+            //                     break;
+            //                 case 4:
+            //                     str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName + "%";
+            //                     // str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterUnit;
+            //                     break;
+            //             }
+
+
+            //             str += "</div>";
+            //         }
+            //     }
+            //     str += "</div>";
+            // }
+            weather.innerHTML = str;
+        }
+    </script>
+</body>
+
+</html>
