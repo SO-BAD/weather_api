@@ -18,18 +18,23 @@
             margin: auto;
             background-color: antiquewhite;
         }
-
+        h2{
+            text-align: center;
+        }
         .row {
             display: flex;
             width: 100%;
             margin: 20px 0;
         }
-
+        #weather{
+            margin-top: 60px;
+        }
         .col {
             width: 220px;
             text-align: center;
         }
-        .col:nth-child(1){
+
+        .col:nth-child(1) {
             width: 140px;
             text-align: right;
             padding-right: 30px;
@@ -39,9 +44,11 @@
 
 <body>
     <div id="ct">
-        <select id="lc" onchange="display();">
-
-        </select>
+        <h2>三十六小時天氣預報</h2>
+        <div>
+             請選擇縣市:<select id="lc" onchange="display();"></select>
+        </div>
+       
         <div id="weather">
 
         </div>
@@ -70,10 +77,10 @@
             lc.innerHTML = opt;
             display();
         })
-        function trans(time,data){
-            if( data =="date"){
+        function trans(time, data) {
+            if (data == "date") {
                 return time.split('T')[0];
-            }else{
+            } else {
                 return (time.split('T')[1]).split('+')[0];
             }
         }
@@ -90,44 +97,50 @@
                     switch (i) {
                         case -1:
                             if (j > -1) {
-                                let start =data.cwbopendata.dataset.location[num].weatherElement[0].time[j].startTime;
-                                let end =data.cwbopendata.dataset.location[num].weatherElement[0].time[j].endTime;
-                                str += trans(start,"date") +"-"+trans(start,"time") +"<br>";
-                                str +=  trans(end,"date") + "-"+trans(end,"time");
-                            }else{
+                                let start = data.cwbopendata.dataset.location[num].weatherElement[0].time[j].startTime;
+                                let end = data.cwbopendata.dataset.location[num].weatherElement[0].time[j].endTime;
+                                if (trans(start, "date") == trans(end, "date")) {
+                                    str += trans(start, "date").replace(/-/g,"/").substr(5,5) + "<br>";
+                                    str += trans(start, "time").substr(0,5) + " ~ " + trans(end, "time").substr(0,5);
+                                } else {
+                                    str += trans(start, "date").replace(/-/g,"/").substr(5,5) +" ~ "+ trans(end, "date").replace(/-/g,"/").substr(5,5) + "<br>";
+                                    str +=  trans(start, "time").substr(0,5)+ " ~ " + trans(end, "time").substr(0,5);
+                                }
+
+                            } else {
                                 str += "time";
                             }
                             break;
                         case 0:
                             if (j > -1) {
-                                str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName ;
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName;
                                 let img_num = data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterValue;
-                                if(parseInt(img_num)<10){
-                                    img_num = "0" +img_num;
+                                if (parseInt(img_num) < 10) {
+                                    img_num = "0" + img_num;
                                 }
 
-                                let start =data.cwbopendata.dataset.location[num].weatherElement[0].time[j].startTime;
-                                
-                                let x = (trans(start,"time").split(":")[0] == "18") ? "night/":"day/";
-                                str += "<img src = './svg/"+x+img_num+".svg'>";
-                            }else{
+                                let start = data.cwbopendata.dataset.location[num].weatherElement[0].time[j].startTime;
+
+                                let x = (trans(start, "time").split(":")[0] == "18") ? "night/" : "day/";
+                                str += "<img src = './svg/" + x + img_num + ".svg'>";
+                            } else {
                                 str += "天氣狀態";
                             }
                             break;
                         case 1:
                             if (j > -1) {
-                                str += data.cwbopendata.dataset.location[num].weatherElement[i+1].time[j].parameter.parameterName+" C ~ ";
-                                str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName+" C";
-                            }else{
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i + 1].time[j].parameter.parameterName + " C ~ ";
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i].time[j].parameter.parameterName + " C";
+                            } else {
                                 str += "溫度";
                             }
                             break;
                         default:
                             if (j > -1) {
-                                str += data.cwbopendata.dataset.location[num].weatherElement[i+1].time[j].parameter.parameterName;
-                                str += ((i == 2)?"":"%");
-                            }else{
-                                str += ((i == 2)?"舒適度":"降雨機率");
+                                str += data.cwbopendata.dataset.location[num].weatherElement[i + 1].time[j].parameter.parameterName;
+                                str += ((i == 2) ? "" : "%");
+                            } else {
+                                str += ((i == 2) ? "舒適度" : "降雨機率");
                             }
                             break;
                     }
